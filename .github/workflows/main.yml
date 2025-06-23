@@ -1,1 +1,28 @@
 
+name: Deploy Question Engine
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - 'infra/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Run tests
+        run: pytest backend/tests
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          service: question-engine
+          image: gcr.io/${{ secrets.GCP_PROJECT }}/question-engine:$GITHUB_SHA
